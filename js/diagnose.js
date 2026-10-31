@@ -339,7 +339,7 @@
     let findings = [];
     RULES.forEach((r, i) => {
       let out; try { out = r.fn(ctx); } catch (e) { out = null; if (typeof console !== 'undefined') console.warn('rule ' + r.id + ' failed', e); }
-      if (!out) return; (Array.isArray(out) ? out : [out]).forEach((f, k) => { if (!f) return; f.rule = r.id; f.ruleTitle = r.title; f.order = i * 100 + k; f.key = f.key || (r.id + '|' + T.stripIds(f.title)); f.id = r.id + (k ? '-' + k : ''); findings.push(f); });
+      if (!out) return; (Array.isArray(out) ? out : [out]).forEach((f, k) => { if (!f) return; f.title = T.stripIds(f.title); f.rule = r.id; f.ruleTitle = r.title; f.order = i * 100 + k; f.key = f.key || (r.id + '|' + T.stripIds(f.title)); f.id = r.id + (k ? '-' + k : ''); findings.push(f); });
     });
     findings.sort(findingsSort);
     return { findings, summary: summarize(res, findings) };
