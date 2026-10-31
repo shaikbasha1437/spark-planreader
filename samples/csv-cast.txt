@@ -1,0 +1,5 @@
+== Physical Plan ==
+*(1) Filter ((cast(user_id#38 as int) = 42) OR (event_type#39 = buy))
++- FileScan csv [event_id#37,user_id#38,event_type#39,ts#40] Batched: false, DataFilters: [((cast(user_id#38 as int) = 42) OR (event_type#39 = buy))], Format: CSV, Location: InMemoryFileIndex(1 paths)[file:/data/lake/events_csv], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<event_id:string,user_id:string,event_type:string,ts:string>
+
+

@@ -1,0 +1,9 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- Window [row_number() windowspecdefinition(amount#3 DESC NULLS LAST, specifiedwindowframe(RowFrame, unboundedpreceding$(), currentrow$())) AS rank#6899], [amount#3 DESC NULLS LAST]
+   +- Sort [amount#3 DESC NULLS LAST], false, 0
+      +- Exchange SinglePartition, ENSURE_REQUIREMENTS, [plan_id=550]
+         +- Project [order_id#0L, amount#3]
+            +- FileScan parquet [order_id#0L,amount#3,order_date#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<order_id:bigint,amount:decimal(10,2)>
+
+

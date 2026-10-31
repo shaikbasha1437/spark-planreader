@@ -1,0 +1,8 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[channel#4], functions=[count(1)])
+   +- Exchange hashpartitioning(channel#4, 8), ENSURE_REQUIREMENTS, [plan_id=148]
+      +- HashAggregate(keys=[channel#4], functions=[partial_count(1)])
+         +- Project [channel#4]
+            +- FileScan parquet [channel#4,order_date#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<channel:string>
+

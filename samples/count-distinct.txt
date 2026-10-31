@@ -1,0 +1,12 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[channel#4], functions=[count(orders.customer_id#6916L), count(orders.product_id#6917L), count(orders.order_date#6918)])
+   +- Exchange hashpartitioning(channel#4, 8), ENSURE_REQUIREMENTS, [plan_id=579]
+      +- HashAggregate(keys=[channel#4], functions=[partial_count(orders.customer_id#6916L) FILTER (WHERE (gid#6915 = 1)), partial_count(orders.product_id#6917L) FILTER (WHERE (gid#6915 = 2)), partial_count(orders.order_date#6918) FILTER (WHERE (gid#6915 = 3))])
+         +- HashAggregate(keys=[channel#4, orders.customer_id#6916L, orders.product_id#6917L, orders.order_date#6918, gid#6915], functions=[])
+            +- Exchange hashpartitioning(channel#4, orders.customer_id#6916L, orders.product_id#6917L, orders.order_date#6918, gid#6915, 8), ENSURE_REQUIREMENTS, [plan_id=575]
+               +- HashAggregate(keys=[channel#4, orders.customer_id#6916L, orders.product_id#6917L, orders.order_date#6918, gid#6915], functions=[])
+                  +- Expand [[channel#4, customer_id#1L, null, null, 1], [channel#4, null, product_id#2L, null, 2], [channel#4, null, null, order_date#7, 3]], [channel#4, orders.customer_id#6916L, orders.product_id#6917L, orders.order_date#6918, gid#6915]
+                     +- FileScan parquet [customer_id#1L,product_id#2L,channel#4,order_date#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<customer_id:bigint,product_id:bigint,channel:string>
+
+

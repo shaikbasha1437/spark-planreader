@@ -1,0 +1,39 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=true
++- == Final Plan ==
+   *(6) HashAggregate(keys=[label#37], functions=[sum(v#33L)])
+   +- ShuffleQueryStage 2
+      +- Exchange hashpartitioning(label#37, 8), ENSURE_REQUIREMENTS, [plan_id=1265]
+         +- *(5) HashAggregate(keys=[label#37], functions=[partial_sum(v#33L)])
+            +- *(5) Project [v#33L, label#37]
+               +- *(5) SortMergeJoin(skew=true) [k#32L], [k#36L], Inner
+                  :- *(3) Sort [k#32L ASC NULLS FIRST], false, 0
+                  :  +- AQEShuffleRead skewed
+                  :     +- ShuffleQueryStage 0
+                  :        +- Exchange hashpartitioning(k#32L, 8), ENSURE_REQUIREMENTS, [plan_id=1131]
+                  :           +- *(1) Filter isnotnull(k#32L)
+                  :              +- *(1) ColumnarToRow
+                  :                 +- FileScan parquet [k#32L,v#33L] Batched: true, DataFilters: [isnotnull(k#32L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/skew_fact], PartitionFilters: [], PushedFilters: [IsNotNull(k)], ReadSchema: struct<k:bigint,v:bigint>
+                  +- *(4) Sort [k#36L ASC NULLS FIRST], false, 0
+                     +- AQEShuffleRead
+                        +- ShuffleQueryStage 1
+                           +- Exchange hashpartitioning(k#36L, 8), ENSURE_REQUIREMENTS, [plan_id=1148]
+                              +- *(2) Filter isnotnull(k#36L)
+                                 +- *(2) ColumnarToRow
+                                    +- FileScan parquet [k#36L,label#37] Batched: true, DataFilters: [isnotnull(k#36L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/skew_dim], PartitionFilters: [], PushedFilters: [IsNotNull(k)], ReadSchema: struct<k:bigint,label:string>
++- == Initial Plan ==
+   HashAggregate(keys=[label#37], functions=[sum(v#33L)])
+   +- Exchange hashpartitioning(label#37, 8), ENSURE_REQUIREMENTS, [plan_id=1100]
+      +- HashAggregate(keys=[label#37], functions=[partial_sum(v#33L)])
+         +- Project [v#33L, label#37]
+            +- SortMergeJoin [k#32L], [k#36L], Inner
+               :- Sort [k#32L ASC NULLS FIRST], false, 0
+               :  +- Exchange hashpartitioning(k#32L, 8), ENSURE_REQUIREMENTS, [plan_id=1092]
+               :     +- Filter isnotnull(k#32L)
+               :        +- FileScan parquet [k#32L,v#33L] Batched: true, DataFilters: [isnotnull(k#32L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/skew_fact], PartitionFilters: [], PushedFilters: [IsNotNull(k)], ReadSchema: struct<k:bigint,v:bigint>
+               +- Sort [k#36L ASC NULLS FIRST], false, 0
+                  +- Exchange hashpartitioning(k#36L, 8), ENSURE_REQUIREMENTS, [plan_id=1093]
+                     +- Filter isnotnull(k#36L)
+                        +- FileScan parquet [k#36L,label#37] Batched: true, DataFilters: [isnotnull(k#36L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/skew_dim], PartitionFilters: [], PushedFilters: [IsNotNull(k)], ReadSchema: struct<k:bigint,label:string>
+
+

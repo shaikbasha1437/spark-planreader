@@ -1,0 +1,19 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[label#19], functions=[sum(v#17L)])
+   +- Exchange hashpartitioning(label#19, 8), ENSURE_REQUIREMENTS, [plan_id=1020]
+      +- HashAggregate(keys=[label#19], functions=[partial_sum(v#17L)])
+         +- Project [v#17L, label#19]
+            +- BroadcastHashJoin [k#16L, cast(salt#7667 as bigint)], [k#18L, salt#7669L], Inner, BuildRight, false
+               :- Filter (isnotnull(k#16L) AND isnotnull(salt#7667))
+               :  +- Project [k#16L, v#17L, cast((rand(7) * 8.0) as int) AS salt#7667]
+               :     +- FileScan parquet [k#16L,v#17L] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/skew_fact], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<k:bigint,v:bigint>
+               +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, bigint, false], input[2, bigint, false]),false), [plan_id=1015]
+                  +- BroadcastNestedLoopJoin BuildRight, Cross
+                     :- Filter isnotnull(k#18L)
+                     :  +- FileScan parquet [k#18L,label#19] Batched: true, DataFilters: [isnotnull(k#18L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/skew_dim], PartitionFilters: [], PushedFilters: [IsNotNull(k)], ReadSchema: struct<k:bigint,label:string>
+                     +- BroadcastExchange IdentityBroadcastMode, [plan_id=1012]
+                        +- Project [id#7668L AS salt#7669L]
+                           +- Range (0, 8, step=1, splits=4)
+
+

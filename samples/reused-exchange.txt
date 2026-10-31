@@ -1,0 +1,15 @@
+== Physical Plan ==
+*(5) Project [customer_id#1L, amt#6974, amt#6978 AS other#6973]
++- *(5) SortMergeJoin [order_date#7, customer_id#1L], [order_date#6995, customer_id#6989L], Inner
+   :- *(2) Sort [order_date#7 ASC NULLS FIRST, customer_id#1L ASC NULLS FIRST], false, 0
+   :  +- *(2) HashAggregate(keys=[order_date#7, customer_id#1L], functions=[sum(amount#3)])
+   :     +- Exchange hashpartitioning(order_date#7, customer_id#1L, 8), ENSURE_REQUIREMENTS, [plan_id=822]
+   :        +- *(1) HashAggregate(keys=[order_date#7, customer_id#1L], functions=[partial_sum(amount#3)])
+   :           +- *(1) Filter isnotnull(customer_id#1L)
+   :              +- *(1) ColumnarToRow
+   :                 +- FileScan parquet [customer_id#1L,amount#3,order_date#7] Batched: true, DataFilters: [isnotnull(customer_id#1L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [isnotnull(order_date#7)], PushedFilters: [IsNotNull(customer_id)], ReadSchema: struct<customer_id:bigint,amount:decimal(10,2)>
+   +- *(4) Sort [order_date#6995 ASC NULLS FIRST, customer_id#6989L ASC NULLS FIRST], false, 0
+      +- *(4) HashAggregate(keys=[order_date#6995, customer_id#6989L], functions=[sum(amount#6991)])
+         +- ReusedExchange [order_date#6995, customer_id#6989L, sum#7003, isEmpty#7004], Exchange hashpartitioning(order_date#7, customer_id#1L, 8), ENSURE_REQUIREMENTS, [plan_id=822]
+
+

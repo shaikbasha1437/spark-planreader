@@ -1,0 +1,21 @@
+== Physical Plan ==
+*(7) Sort [revenue#41 DESC NULLS LAST], true, 0
++- Exchange rangepartitioning(revenue#41 DESC NULLS LAST, 8), ENSURE_REQUIREMENTS, [plan_id=133]
+   +- *(6) HashAggregate(keys=[country#10], functions=[sum(amount#3)])
+      +- Exchange hashpartitioning(country#10, 8), ENSURE_REQUIREMENTS, [plan_id=129]
+         +- *(5) HashAggregate(keys=[country#10], functions=[partial_sum(amount#3)])
+            +- *(5) Project [amount#3, country#10]
+               +- *(5) SortMergeJoin [customer_id#1L], [customer_id#8L], Inner
+                  :- *(2) Sort [customer_id#1L ASC NULLS FIRST], false, 0
+                  :  +- Exchange hashpartitioning(customer_id#1L, 8), ENSURE_REQUIREMENTS, [plan_id=111]
+                  :     +- *(1) Project [customer_id#1L, amount#3]
+                  :        +- *(1) Filter isnotnull(customer_id#1L)
+                  :           +- *(1) ColumnarToRow
+                  :              +- FileScan parquet [customer_id#1L,amount#3,order_date#7] Batched: true, DataFilters: [isnotnull(customer_id#1L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [IsNotNull(customer_id)], ReadSchema: struct<customer_id:bigint,amount:decimal(10,2)>
+                  +- *(4) Sort [customer_id#8L ASC NULLS FIRST], false, 0
+                     +- Exchange hashpartitioning(customer_id#8L, 8), ENSURE_REQUIREMENTS, [plan_id=120]
+                        +- *(3) Filter isnotnull(customer_id#8L)
+                           +- *(3) ColumnarToRow
+                              +- FileScan parquet [customer_id#8L,country#10] Batched: true, DataFilters: [isnotnull(customer_id#8L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/customers], PartitionFilters: [], PushedFilters: [IsNotNull(customer_id)], ReadSchema: struct<customer_id:bigint,country:string>
+
+

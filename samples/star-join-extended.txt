@@ -1,0 +1,66 @@
+== Parsed Logical Plan ==
+'Aggregate ['c.country, 'p.category], ['c.country, 'p.category, 'count(1) AS n#87, 'sum('o.amount) AS revenue#88]
++- 'Filter (('o.order_date >= 2026-02-01) AND ('o.channel = web))
+   +- 'Join Inner, ('o.product_id = 'p.product_id)
+      :- 'Join Inner, ('o.customer_id = 'c.customer_id)
+      :  :- 'SubqueryAlias o
+      :  :  +- 'UnresolvedRelation [orders], [], false
+      :  +- 'SubqueryAlias c
+      :     +- 'UnresolvedRelation [customers], [], false
+      +- 'SubqueryAlias p
+         +- 'UnresolvedRelation [products], [], false
+
+== Analyzed Logical Plan ==
+country: string, category: string, n: bigint, revenue: decimal(20,2)
+Aggregate [country#10, category#14], [country#10, category#14, count(1) AS n#87L, sum(amount#3) AS revenue#88]
++- Filter ((order_date#7 >= 2026-02-01) AND (channel#4 = web))
+   +- Join Inner, (product_id#2L = product_id#12L)
+      :- Join Inner, (customer_id#1L = customer_id#8L)
+      :  :- SubqueryAlias o
+      :  :  +- SubqueryAlias orders
+      :  :     +- View (`orders`, [order_id#0L, customer_id#1L, product_id#2L, amount#3, channel#4, note#5, tags#6, order_date#7])
+      :  :        +- Relation [order_id#0L,customer_id#1L,product_id#2L,amount#3,channel#4,note#5,tags#6,order_date#7] parquet
+      :  +- SubqueryAlias c
+      :     +- SubqueryAlias customers
+      :        +- View (`customers`, [customer_id#8L, name#9, country#10, signup_date#11])
+      :           +- Relation [customer_id#8L,name#9,country#10,signup_date#11] parquet
+      +- SubqueryAlias p
+         +- SubqueryAlias products
+            +- View (`products`, [product_id#12L, product_name#13, category#14, list_price#15])
+               +- Relation [product_id#12L,product_name#13,category#14,list_price#15] parquet
+
+== Optimized Logical Plan ==
+Aggregate [country#10, category#14], [country#10, category#14, count(1) AS n#87L, sum(amount#3) AS revenue#88]
++- Project [amount#3, country#10, category#14]
+   +- Join Inner, (product_id#2L = product_id#12L)
+      :- Project [product_id#2L, amount#3, country#10]
+      :  +- Join Inner, (customer_id#1L = customer_id#8L)
+      :     :- Project [customer_id#1L, product_id#2L, amount#3]
+      :     :  +- Filter (((isnotnull(order_date#7) AND isnotnull(channel#4)) AND ((order_date#7 >= 2026-02-01) AND (channel#4 = web))) AND (isnotnull(customer_id#1L) AND isnotnull(product_id#2L)))
+      :     :     +- Relation [order_id#0L,customer_id#1L,product_id#2L,amount#3,channel#4,note#5,tags#6,order_date#7] parquet
+      :     +- Project [customer_id#8L, country#10]
+      :        +- Filter isnotnull(customer_id#8L)
+      :           +- Relation [customer_id#8L,name#9,country#10,signup_date#11] parquet
+      +- Project [product_id#12L, category#14]
+         +- Filter isnotnull(product_id#12L)
+            +- Relation [product_id#12L,product_name#13,category#14,list_price#15] parquet
+
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[country#10, category#14], functions=[count(1), sum(amount#3)], output=[country#10, category#14, n#87L, revenue#88])
+   +- Exchange hashpartitioning(country#10, category#14, 8), ENSURE_REQUIREMENTS, [plan_id=356]
+      +- HashAggregate(keys=[country#10, category#14], functions=[partial_count(1), partial_sum(amount#3)], output=[country#10, category#14, count#94L, sum#95, isEmpty#96])
+         +- Project [amount#3, country#10, category#14]
+            +- BroadcastHashJoin [product_id#2L], [product_id#12L], Inner, BuildRight, false
+               :- Project [product_id#2L, amount#3, country#10]
+               :  +- BroadcastHashJoin [customer_id#1L], [customer_id#8L], Inner, BuildRight, false
+               :     :- Project [customer_id#1L, product_id#2L, amount#3]
+               :     :  +- Filter (((isnotnull(channel#4) AND (channel#4 = web)) AND isnotnull(customer_id#1L)) AND isnotnull(product_id#2L))
+               :     :     +- FileScan parquet [customer_id#1L,product_id#2L,amount#3,channel#4,order_date#7] Batched: true, DataFilters: [isnotnull(channel#4), (channel#4 = web), isnotnull(customer_id#1L), isnotnull(product_id#2L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [isnotnull(order_date#7), (order_date#7 >= 2026-02-01)], PushedFilters: [IsNotNull(channel), EqualTo(channel,web), IsNotNull(customer_id), IsNotNull(product_id)], ReadSchema: struct<customer_id:bigint,product_id:bigint,amount:decimal(10,2),channel:string>
+               :     +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, bigint, false]),false), [plan_id=347]
+               :        +- Filter isnotnull(customer_id#8L)
+               :           +- FileScan parquet [customer_id#8L,country#10] Batched: true, DataFilters: [isnotnull(customer_id#8L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/customers], PartitionFilters: [], PushedFilters: [IsNotNull(customer_id)], ReadSchema: struct<customer_id:bigint,country:string>
+               +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, bigint, false]),false), [plan_id=351]
+                  +- Filter isnotnull(product_id#12L)
+                     +- FileScan parquet [product_id#12L,category#14] Batched: true, DataFilters: [isnotnull(product_id#12L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/products], PartitionFilters: [], PushedFilters: [IsNotNull(product_id)], ReadSchema: struct<product_id:bigint,category:string>
+

@@ -1,0 +1,10 @@
+== Physical Plan ==
+TakeOrderedAndProject(limit=10, orderBy=[order_id#0L ASC NULLS FIRST], output=[order_id#0L])
++- Union
+   :- *(1) Project [order_id#0L]
+   :  +- *(1) ColumnarToRow
+   :     +- FileScan parquet [order_id#0L,order_date#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<order_id:bigint>
+   +- *(2) ColumnarToRow
+      +- FileScan parquet [customer_id#8L] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/customers], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<customer_id:bigint>
+
+

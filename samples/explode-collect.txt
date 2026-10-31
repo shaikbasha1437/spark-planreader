@@ -1,0 +1,11 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- ObjectHashAggregate(keys=[customer_id#1L], functions=[collect_list(tag#7679L, 0, 0)])
+   +- Exchange hashpartitioning(customer_id#1L, 8), ENSURE_REQUIREMENTS, [plan_id=1056]
+      +- ObjectHashAggregate(keys=[customer_id#1L], functions=[partial_collect_list(tag#7679L, 0, 0)])
+         +- Generate explode(tags#6), [customer_id#1L], false, [tag#7679L]
+            +- Project [customer_id#1L, tags#6]
+               +- Filter ((size(tags#6, false) > 0) AND isnotnull(tags#6))
+                  +- FileScan parquet [customer_id#1L,tags#6,order_date#7] Batched: true, DataFilters: [(size(tags#6, false) > 0), isnotnull(tags#6)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [IsNotNull(tags)], ReadSchema: struct<customer_id:bigint,tags:array<bigint>>
+
+

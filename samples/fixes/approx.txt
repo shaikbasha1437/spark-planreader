@@ -1,0 +1,8 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[channel#4], functions=[approx_count_distinct(customer_id#1L, 0.05, 0, 0), approx_count_distinct(product_id#2L, 0.05, 0, 0), approx_count_distinct(order_date#7, 0.05, 0, 0)])
+   +- Exchange hashpartitioning(channel#4, 8), ENSURE_REQUIREMENTS, [plan_id=928]
+      +- HashAggregate(keys=[channel#4], functions=[partial_approx_count_distinct(customer_id#1L, 0.05, 0, 0), partial_approx_count_distinct(product_id#2L, 0.05, 0, 0), partial_approx_count_distinct(order_date#7, 0.05, 0, 0)])
+         +- FileScan parquet [customer_id#1L,product_id#2L,channel#4,order_date#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<customer_id:bigint,product_id:bigint,channel:string>
+
+

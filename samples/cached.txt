@@ -1,0 +1,18 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[country#10], functions=[count(1)])
+   +- Exchange hashpartitioning(country#10, 8), ENSURE_REQUIREMENTS, [plan_id=241]
+      +- HashAggregate(keys=[country#10], functions=[partial_count(1)])
+         +- Project [country#10]
+            +- BroadcastHashJoin [customer_id#8L], [customer_id#1L], Inner, BuildLeft, false
+               :- BroadcastExchange HashedRelationBroadcastMode(List(input[0, bigint, false]),false), [plan_id=236]
+               :  +- Filter isnotnull(customer_id#8L)
+               :     +- InMemoryTableScan [customer_id#8L, country#10], [isnotnull(customer_id#8L)]
+               :           +- InMemoryRelation [customer_id#8L, name#9, country#10, signup_date#11], StorageLevel(disk, memory, deserialized, 1 replicas)
+               :                 +- *(1) ColumnarToRow
+               :                    +- FileScan parquet [customer_id#8L,name#9,country#10,signup_date#11] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/customers], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<customer_id:bigint,name:string,country:string,signup_date:date>
+               +- Project [customer_id#1L]
+                  +- Filter isnotnull(customer_id#1L)
+                     +- FileScan parquet [customer_id#1L,order_date#7] Batched: true, DataFilters: [isnotnull(customer_id#1L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [IsNotNull(customer_id)], ReadSchema: struct<customer_id:bigint>
+
+

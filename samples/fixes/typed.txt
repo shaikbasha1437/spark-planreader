@@ -1,0 +1,6 @@
+== Physical Plan ==
+*(1) Project [event_id#37, user_id#38]
++- *(1) Filter ((user_id#38 = 42) OR (event_type#39 = buy))
+   +- FileScan csv [event_id#37,user_id#38,event_type#39] Batched: false, DataFilters: [((user_id#38 = 42) OR (event_type#39 = buy))], Format: CSV, Location: InMemoryFileIndex(1 paths)[file:/data/lake/events_csv], PartitionFilters: [], PushedFilters: [Or(EqualTo(user_id,42),EqualTo(event_type,buy))], ReadSchema: struct<event_id:string,user_id:string,event_type:string>
+
+

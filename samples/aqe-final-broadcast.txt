@@ -1,0 +1,34 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=true
++- == Final Plan ==
+   ResultQueryStage 2
+   +- *(3) HashAggregate(keys=[category#14], functions=[sum(amount#3)])
+      +- AQEShuffleRead coalesced
+         +- ShuffleQueryStage 1
+            +- Exchange hashpartitioning(category#14, 8), ENSURE_REQUIREMENTS, [plan_id=1416]
+               +- *(2) HashAggregate(keys=[category#14], functions=[partial_sum(amount#3)])
+                  +- *(2) Project [amount#3, category#14]
+                     +- *(2) BroadcastHashJoin [product_id#2L], [product_id#12L], Inner, BuildRight, false
+                        :- *(2) Project [product_id#2L, amount#3]
+                        :  +- *(2) Filter isnotnull(product_id#2L)
+                        :     +- *(2) ColumnarToRow
+                        :        +- FileScan parquet [product_id#2L,amount#3,order_date#7] Batched: true, DataFilters: [isnotnull(product_id#2L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [isnotnull(order_date#7), (order_date#7 >= 2026-01-10), (order_date#7 <= 2026-01-20)], PushedFilters: [IsNotNull(product_id)], ReadSchema: struct<product_id:bigint,amount:decimal(10,2)>
+                        +- BroadcastQueryStage 0
+                           +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, bigint, false]),false), [plan_id=1360]
+                              +- *(1) Filter isnotnull(product_id#12L)
+                                 +- *(1) ColumnarToRow
+                                    +- FileScan parquet [product_id#12L,category#14] Batched: true, DataFilters: [isnotnull(product_id#12L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/products], PartitionFilters: [], PushedFilters: [IsNotNull(product_id)], ReadSchema: struct<product_id:bigint,category:string>
++- == Initial Plan ==
+   HashAggregate(keys=[category#14], functions=[sum(amount#3)])
+   +- Exchange hashpartitioning(category#14, 8), ENSURE_REQUIREMENTS, [plan_id=1334]
+      +- HashAggregate(keys=[category#14], functions=[partial_sum(amount#3)])
+         +- Project [amount#3, category#14]
+            +- BroadcastHashJoin [product_id#2L], [product_id#12L], Inner, BuildRight, false
+               :- Project [product_id#2L, amount#3]
+               :  +- Filter isnotnull(product_id#2L)
+               :     +- FileScan parquet [product_id#2L,amount#3,order_date#7] Batched: true, DataFilters: [isnotnull(product_id#2L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [isnotnull(order_date#7), (order_date#7 >= 2026-01-10), (order_date#7 <= 2026-01-20)], PushedFilters: [IsNotNull(product_id)], ReadSchema: struct<product_id:bigint,amount:decimal(10,2)>
+               +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, bigint, false]),false), [plan_id=1329]
+                  +- Filter isnotnull(product_id#12L)
+                     +- FileScan parquet [product_id#12L,category#14] Batched: true, DataFilters: [isnotnull(product_id#12L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/products], PartitionFilters: [], PushedFilters: [IsNotNull(product_id)], ReadSchema: struct<product_id:bigint,category:string>
+
+

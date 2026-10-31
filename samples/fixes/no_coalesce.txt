@@ -1,0 +1,7 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- Sort [amount#3 ASC NULLS FIRST], true, 0
+   +- Exchange rangepartitioning(amount#3 ASC NULLS FIRST, 8), ENSURE_REQUIREMENTS, [plan_id=949]
+      +- FileScan parquet [order_id#0L,customer_id#1L,product_id#2L,amount#3,channel#4,note#5,tags#6,order_date#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<order_id:bigint,customer_id:bigint,product_id:bigint,amount:decimal(10,2),channel:string,n...
+
+

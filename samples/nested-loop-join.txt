@@ -1,0 +1,11 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- Project [name#9, product_name#13]
+   +- BroadcastNestedLoopJoin BuildRight, Inner, (customer_id#8L > (product_id#12L * 10))
+      :- Filter isnotnull(customer_id#8L)
+      :  +- FileScan parquet [customer_id#8L,name#9] Batched: true, DataFilters: [isnotnull(customer_id#8L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/customers], PartitionFilters: [], PushedFilters: [IsNotNull(customer_id)], ReadSchema: struct<customer_id:bigint,name:string>
+      +- BroadcastExchange IdentityBroadcastMode, [plan_id=615]
+         +- Filter isnotnull(product_id#12L)
+            +- FileScan parquet [product_id#12L,product_name#13] Batched: true, DataFilters: [isnotnull(product_id#12L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/products], PartitionFilters: [], PushedFilters: [IsNotNull(product_id)], ReadSchema: struct<product_id:bigint,product_name:string>
+
+

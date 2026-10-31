@@ -1,0 +1,109 @@
+== Physical Plan ==
+AdaptiveSparkPlan (17)
++- HashAggregate (16)
+   +- Exchange (15)
+      +- HashAggregate (14)
+         +- Project (13)
+            +- BroadcastHashJoin Inner BuildRight (12)
+               :- Project (8)
+               :  +- BroadcastHashJoin Inner BuildRight (7)
+               :     :- Project (3)
+               :     :  +- Filter (2)
+               :     :     +- Scan parquet  (1)
+               :     +- BroadcastExchange (6)
+               :        +- Filter (5)
+               :           +- Scan parquet  (4)
+               +- BroadcastExchange (11)
+                  +- Filter (10)
+                     +- Scan parquet  (9)
+
+
+(1) Scan parquet 
+Output [5]: [customer_id#1L, product_id#2L, amount#3, channel#4, order_date#7]
+Batched: true
+Location: InMemoryFileIndex [file:/data/lake/orders]
+PartitionFilters: [isnotnull(order_date#7), (order_date#7 >= 2026-02-01)]
+PushedFilters: [IsNotNull(channel), EqualTo(channel,web), IsNotNull(customer_id), IsNotNull(product_id)]
+ReadSchema: struct<customer_id:bigint,product_id:bigint,amount:decimal(10,2),channel:string>
+
+(2) Filter
+Input [5]: [customer_id#1L, product_id#2L, amount#3, channel#4, order_date#7]
+Condition : (((isnotnull(channel#4) AND (channel#4 = web)) AND isnotnull(customer_id#1L)) AND isnotnull(product_id#2L))
+
+(3) Project
+Output [3]: [customer_id#1L, product_id#2L, amount#3]
+Input [5]: [customer_id#1L, product_id#2L, amount#3, channel#4, order_date#7]
+
+(4) Scan parquet 
+Output [2]: [customer_id#16L, country#18]
+Batched: true
+Location: InMemoryFileIndex [file:/data/lake/customers]
+PushedFilters: [IsNotNull(customer_id)]
+ReadSchema: struct<customer_id:bigint,country:string>
+
+(5) Filter
+Input [2]: [customer_id#16L, country#18]
+Condition : isnotnull(customer_id#16L)
+
+(6) BroadcastExchange
+Input [2]: [customer_id#16L, country#18]
+Arguments: HashedRelationBroadcastMode(List(input[0, bigint, false]),false), [plan_id=347]
+
+(7) BroadcastHashJoin
+Left keys [1]: [customer_id#1L]
+Right keys [1]: [customer_id#16L]
+Join type: Inner
+Join condition: None
+
+(8) Project
+Output [3]: [product_id#2L, amount#3, country#18]
+Input [5]: [customer_id#1L, product_id#2L, amount#3, customer_id#16L, country#18]
+
+(9) Scan parquet 
+Output [2]: [product_id#24L, category#26]
+Batched: true
+Location: InMemoryFileIndex [file:/data/lake/products]
+PushedFilters: [IsNotNull(product_id)]
+ReadSchema: struct<product_id:bigint,category:string>
+
+(10) Filter
+Input [2]: [product_id#24L, category#26]
+Condition : isnotnull(product_id#24L)
+
+(11) BroadcastExchange
+Input [2]: [product_id#24L, category#26]
+Arguments: HashedRelationBroadcastMode(List(input[0, bigint, false]),false), [plan_id=351]
+
+(12) BroadcastHashJoin
+Left keys [1]: [product_id#2L]
+Right keys [1]: [product_id#24L]
+Join type: Inner
+Join condition: None
+
+(13) Project
+Output [3]: [amount#3, country#18, category#26]
+Input [5]: [product_id#2L, amount#3, country#18, product_id#24L, category#26]
+
+(14) HashAggregate
+Input [3]: [amount#3, country#18, category#26]
+Keys [2]: [country#18, category#26]
+Functions [2]: [partial_count(1), partial_sum(amount#3)]
+Aggregate Attributes [3]: [count#161L, sum#162, isEmpty#163]
+Results [5]: [country#18, category#26, count#164L, sum#165, isEmpty#166]
+
+(15) Exchange
+Input [5]: [country#18, category#26, count#164L, sum#165, isEmpty#166]
+Arguments: hashpartitioning(country#18, category#26, 8), ENSURE_REQUIREMENTS, [plan_id=356]
+
+(16) HashAggregate
+Input [5]: [country#18, category#26, count#164L, sum#165, isEmpty#166]
+Keys [2]: [country#18, category#26]
+Functions [2]: [count(1), sum(amount#3)]
+Aggregate Attributes [2]: [count(1)#155L, sum(amount#3)#156]
+Results [4]: [country#18, category#26, count(1)#155L AS n#153L, sum(amount#3)#156 AS revenue#154]
+
+(17) AdaptiveSparkPlan
+Output [4]: [country#18, category#26, n#153L, revenue#154]
+Arguments: isFinalPlan=false
+
+

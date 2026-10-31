@@ -1,0 +1,25 @@
+== Optimized Logical Plan ==
+Aggregate [country#6870], [country#6870, count(1) AS n#6866L], Statistics(sizeInBytes=82.3 MiB)
++- Project [country#6870], Statistics(sizeInBytes=64.0 MiB)
+   +- Join Inner, ((customer_id#6868L % 300) = product_id#6872L), Statistics(sizeInBytes=100.5 MiB)
+      :- Project [customer_id#6868L, country#6870], Statistics(sizeInBytes=41.7 KiB)
+      :  +- Filter ((isnotnull(country#6870) AND NOT (country#6870 = JP)) AND isnotnull(customer_id#6868L)), Statistics(sizeInBytes=69.4 KiB)
+      :     +- Relation spark_catalog.demo.customers[customer_id#6868L,name#6869,country#6870,signup_date#6871] parquet, Statistics(sizeInBytes=69.4 KiB)
+      +- Project [product_id#6872L], Statistics(sizeInBytes=2.4 KiB)
+         +- Filter isnotnull(product_id#6872L), Statistics(sizeInBytes=9.7 KiB)
+            +- Relation spark_catalog.demo.products[product_id#6872L,product_name#6873,category#6874,list_price#6875] parquet, Statistics(sizeInBytes=9.7 KiB)
+
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[country#6870], functions=[count(1)], output=[country#6870, n#6866L])
+   +- Exchange hashpartitioning(country#6870, 8), ENSURE_REQUIREMENTS, [plan_id=486]
+      +- HashAggregate(keys=[country#6870], functions=[partial_count(1)], output=[country#6870, count#6879L])
+         +- Project [country#6870]
+            +- BroadcastHashJoin [(customer_id#6868L % 300)], [product_id#6872L], Inner, BuildRight, false
+               :- Filter ((isnotnull(country#6870) AND NOT (country#6870 = JP)) AND isnotnull(customer_id#6868L))
+               :  +- FileScan parquet spark_catalog.demo.customers[customer_id#6868L,country#6870] Batched: true, DataFilters: [isnotnull(country#6870), NOT (country#6870 = JP), isnotnull(customer_id#6868L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/customers], PartitionFilters: [], PushedFilters: [IsNotNull(country), Not(EqualTo(country,JP)), IsNotNull(customer_id)], ReadSchema: struct<customer_id:bigint,country:string>
+               +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, bigint, false]),false), [plan_id=481]
+                  +- Filter isnotnull(product_id#6872L)
+                     +- FileScan parquet spark_catalog.demo.products[product_id#6872L] Batched: true, DataFilters: [isnotnull(product_id#6872L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/products], PartitionFilters: [], PushedFilters: [IsNotNull(product_id)], ReadSchema: struct<product_id:bigint>
+
+

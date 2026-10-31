@@ -1,0 +1,131 @@
+== Physical Plan ==
+AdaptiveSparkPlan (12)
++- HashAggregate (11)
+   +- Exchange (10)
+      +- HashAggregate (9)
+         +- Project (8)
+            +- BroadcastHashJoin Inner BuildRight (7)
+               :- Project (3)
+               :  +- Filter (2)
+               :     +- Scan parquet  (1)
+               +- BroadcastExchange (6)
+                  +- Filter (5)
+                     +- Scan parquet  (4)
+
+
+(1) Scan parquet 
+Output [3]: [customer_id#1L, amount#3, order_date#7]
+Batched: true
+Location: InMemoryFileIndex [file:/data/lake/orders]
+PushedFilters: [IsNotNull(amount), IsNotNull(customer_id)]
+ReadSchema: struct<customer_id:bigint,amount:decimal(10,2)>
+
+(2) Filter
+Input [3]: [customer_id#1L, amount#3, order_date#7]
+Condition : ((isnotnull(amount#3) AND (cast(amount#3 as decimal(14,6)) > Subquery subquery#17, [id=#50])) AND isnotnull(customer_id#1L))
+
+(3) Project
+Output [2]: [customer_id#1L, amount#3]
+Input [3]: [customer_id#1L, amount#3, order_date#7]
+
+(4) Scan parquet 
+Output [2]: [customer_id#8L, country#10]
+Batched: true
+Location: InMemoryFileIndex [file:/data/lake/customers]
+PushedFilters: [IsNotNull(customer_id)]
+ReadSchema: struct<customer_id:bigint,country:string>
+
+(5) Filter
+Input [2]: [customer_id#8L, country#10]
+Condition : isnotnull(customer_id#8L)
+
+(6) BroadcastExchange
+Input [2]: [customer_id#8L, country#10]
+Arguments: HashedRelationBroadcastMode(List(input[0, bigint, false]),false), [plan_id=65]
+
+(7) BroadcastHashJoin
+Left keys [1]: [customer_id#1L]
+Right keys [1]: [customer_id#8L]
+Join type: Inner
+Join condition: None
+
+(8) Project
+Output [2]: [amount#3, country#10]
+Input [4]: [customer_id#1L, amount#3, customer_id#8L, country#10]
+
+(9) HashAggregate
+Input [2]: [amount#3, country#10]
+Keys [1]: [country#10]
+Functions [1]: [partial_sum(amount#3)]
+Aggregate Attributes [2]: [sum#29, isEmpty#30]
+Results [3]: [country#10, sum#31, isEmpty#32]
+
+(10) Exchange
+Input [3]: [country#10, sum#31, isEmpty#32]
+Arguments: hashpartitioning(country#10, 8), ENSURE_REQUIREMENTS, [plan_id=70]
+
+(11) HashAggregate
+Input [3]: [country#10, sum#31, isEmpty#32]
+Keys [1]: [country#10]
+Functions [1]: [sum(amount#3)]
+Aggregate Attributes [1]: [sum(amount#3)#28]
+Results [2]: [country#10, sum(amount#3)#28 AS rev#16]
+
+(12) AdaptiveSparkPlan
+Output [2]: [country#10, rev#16]
+Arguments: isFinalPlan=false
+
+===== Subqueries =====
+
+Subquery:1 Hosting operator id = 2 Hosting Expression = Subquery subquery#17, [id=#50]
+AdaptiveSparkPlan (18)
++- HashAggregate (17)
+   +- Exchange (16)
+      +- HashAggregate (15)
+         +- Project (14)
+            +- Scan parquet  (13)
+
+
+(13) Scan parquet 
+Output [2]: [amount#23, order_date#27]
+Batched: true
+Location: InMemoryFileIndex [file:/data/lake/orders]
+ReadSchema: struct<amount:decimal(10,2)>
+
+(14) Project
+Output [1]: [amount#23]
+Input [2]: [amount#23, order_date#27]
+
+(15) HashAggregate
+Input [1]: [amount#23]
+Keys: []
+Functions [1]: [partial_avg(UnscaledValue(amount#23))]
+Aggregate Attributes [2]: [sum#33, count#34L]
+Results [2]: [sum#35, count#36L]
+
+(16) Exchange
+Input [2]: [sum#35, count#36L]
+Arguments: SinglePartition, ENSURE_REQUIREMENTS, [plan_id=48]
+
+(17) HashAggregate
+Input [2]: [sum#35, count#36L]
+Keys: []
+Functions [1]: [avg(UnscaledValue(amount#23))]
+Aggregate Attributes [1]: [avg(UnscaledValue(amount#23))#18]
+Results [1]: [cast((avg(UnscaledValue(amount#23))#18 / 100.0) as decimal(14,6)) AS avg(amount)#19]
+
+(18) AdaptiveSparkPlan
+Output [1]: [avg(amount)#19]
+Arguments: isFinalPlan=false
+
+Subquery:2 Hosting operator id = 1 Hosting Expression = Subquery subquery#17, [id=#52]
+AdaptiveSparkPlan (18)
++- HashAggregate (17)
+   +- Exchange (16)
+      +- HashAggregate (15)
+         +- Project (14)
+            +- Scan parquet  (13)
+
+
+
+

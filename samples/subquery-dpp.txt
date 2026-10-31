@@ -1,0 +1,40 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- Project [order_date#7, customer_id#1L, amt#6927, amt#6931 AS prev_amt#6925]
+   +- BroadcastHashJoin [customer_id#1L, order_date#7], [customer_id#6952L, date_add(order_date#6958, 1)], Inner, BuildRight, false
+      :- Filter (isnotnull(amt#6927) AND (cast(amt#6927 as decimal(24,6)) > cast(Subquery subquery#6926, [id=#723] as decimal(24,6))))
+      :  :  +- Subquery subquery#6926, [id=#723]
+      :  :     +- AdaptiveSparkPlan isFinalPlan=false
+      :  :        +- HashAggregate(keys=[], functions=[avg(UnscaledValue(amount#6937))])
+      :  :           +- Exchange SinglePartition, ENSURE_REQUIREMENTS, [plan_id=689]
+      :  :              +- HashAggregate(keys=[], functions=[partial_avg(UnscaledValue(amount#6937))])
+      :  :                 +- Project [amount#6937]
+      :  :                    +- FileScan parquet [amount#6937,order_date#6941] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<amount:decimal(10,2)>
+      :  +- HashAggregate(keys=[order_date#7, customer_id#1L], functions=[sum(amount#3)])
+      :     +- Exchange hashpartitioning(order_date#7, customer_id#1L, 8), ENSURE_REQUIREMENTS, [plan_id=741]
+      :        +- HashAggregate(keys=[order_date#7, customer_id#1L], functions=[partial_sum(amount#3)])
+      :           +- Filter isnotnull(customer_id#1L)
+      :              +- FileScan parquet [customer_id#1L,amount#3,order_date#7] Batched: true, DataFilters: [isnotnull(customer_id#1L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [isnotnull(order_date#7)], PushedFilters: [IsNotNull(customer_id)], ReadSchema: struct<customer_id:bigint,amount:decimal(10,2)>
+      +- BroadcastExchange HashedRelationBroadcastMode(List(input[1, bigint, true], date_add(input[0, date, true], 1)),false), [plan_id=747]
+         +- HashAggregate(keys=[order_date#6958, customer_id#6952L], functions=[sum(amount#6954)])
+            +- Exchange hashpartitioning(order_date#6958, customer_id#6952L, 8), ENSURE_REQUIREMENTS, [plan_id=744]
+               +- HashAggregate(keys=[order_date#6958, customer_id#6952L], functions=[partial_sum(amount#6954)])
+                  +- Filter isnotnull(customer_id#6952L)
+                     +- FileScan parquet [customer_id#6952L,amount#6954,order_date#6958] Batched: true, DataFilters: [isnotnull(customer_id#6952L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [isnotnull(order_date#6958), dynamicpruningexpression(date_add(order_date#6958, 1) IN dynamicprun..., PushedFilters: [IsNotNull(customer_id)], ReadSchema: struct<customer_id:bigint,amount:decimal(10,2)>
+                           +- SubqueryAdaptiveBroadcast dynamicpruning#6960, [1], true, Filter (isnotnull(amt#6927) AND (cast(amt#6927 as decimal(24,6)) > cast(scalar-subquery#6926 [] as decimal(24,6)))), [customer_id#1L, order_date#7]
+                              +- AdaptiveSparkPlan isFinalPlan=false
+                                 +- Filter (isnotnull(amt#6927) AND (cast(amt#6927 as decimal(24,6)) > cast(Subquery subquery#6926, [id=#714] as decimal(24,6))))
+                                    :  +- Subquery subquery#6926, [id=#714]
+                                    :     +- AdaptiveSparkPlan isFinalPlan=false
+                                    :        +- HashAggregate(keys=[], functions=[avg(UnscaledValue(amount#6937))])
+                                    :           +- Exchange SinglePartition, ENSURE_REQUIREMENTS, [plan_id=712]
+                                    :              +- HashAggregate(keys=[], functions=[partial_avg(UnscaledValue(amount#6937))])
+                                    :                 +- Project [amount#6937]
+                                    :                    +- FileScan parquet [amount#6937,order_date#6941] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<amount:decimal(10,2)>
+                                    +- HashAggregate(keys=[order_date#7, customer_id#1L], functions=[sum(amount#3)])
+                                       +- Exchange hashpartitioning(order_date#7, customer_id#1L, 8), ENSURE_REQUIREMENTS, [plan_id=720]
+                                          +- HashAggregate(keys=[order_date#7, customer_id#1L], functions=[partial_sum(amount#3)])
+                                             +- Filter isnotnull(customer_id#1L)
+                                                +- FileScan parquet [customer_id#1L,amount#3,order_date#7] Batched: true, DataFilters: [isnotnull(customer_id#1L)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [isnotnull(order_date#7)], PushedFilters: [IsNotNull(customer_id)], ReadSchema: struct<customer_id:bigint,amount:decimal(10,2)>
+
+

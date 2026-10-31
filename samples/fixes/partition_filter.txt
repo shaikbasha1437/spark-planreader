@@ -1,0 +1,6 @@
+== Physical Plan ==
+*(1) Project [order_id#0L, amount#3]
++- *(1) ColumnarToRow
+   +- FileScan parquet [order_id#0L,amount#3,order_date#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [isnotnull(order_date#7), (order_date#7 >= 2026-02-20)], PushedFilters: [], ReadSchema: struct<order_id:bigint,amount:decimal(10,2)>
+
+
