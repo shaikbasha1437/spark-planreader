@@ -295,7 +295,7 @@
   function openExport() {
     let md, json, title;
     if (S.mode === 'compare') { if (!S.cmp || S.cmp.error) { say('Compare two plans first'); return; } title = S.cmp.title; md = R.diffMarkdown(S.cmp.diff); json = JSON.stringify({ tool: 'Spark PlanReader', title, score: S.cmp.diff.score, summary: S.cmp.diff.summary, ops: S.cmp.diff.ops, joinChanges: S.cmp.diff.joinChanges, scanChanges: S.cmp.diff.scanChanges, resolved: S.cmp.diff.resolved.map((f) => f.title), added: S.cmp.diff.added.map((f) => f.title) }, null, 2); }
-    else { if (!S.res) { say('Analyze a plan first'); return; } title = S.title || 'Plan'; md = R.markdown(S.res, S.diag, { title }); json = JSON.stringify(R.json(S.res, S.diag), null, 2); }
+    else { if (!S.res) { say('Analyze a plan first'); return; } title = S.title || 'Plan'; md = R.markdown(S.res, S.diag, { title }); json = R.json(S.res, S.diag); }
     const name = slug(title);
     const pre = h('pre', { class: 'raw preview', tabindex: '0', 'aria-label': 'Markdown preview', text: md });
     openModal({ title: 'Export report', size: 'wide', cancelLabel: 'Close', body: h('div', null, h('p', { class: 'muted small', text: 'Reports include findings, fixes and the operator tree. They are generated here; nothing is uploaded.' }), pre),

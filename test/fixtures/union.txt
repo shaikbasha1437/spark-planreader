@@ -1,0 +1,12 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[_groupingexpression#9L], functions=[count(1)])
+   +- Exchange hashpartitioning(_groupingexpression#9L, 8), ENSURE_REQUIREMENTS, [plan_id=27]
+      +- HashAggregate(keys=[_groupingexpression#9L], functions=[partial_count(1)])
+         +- Union
+            :- Project [((id#0L * 2) % 10) AS _groupingexpression#9L]
+            :  +- Range (0, 1000, step=1, splits=2)
+            +- Project [((id#2L * 3) % 10) AS _groupingexpression#10L]
+               +- Range (0, 500, step=1, splits=2)
+
+

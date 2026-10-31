@@ -1,0 +1,115 @@
+== Physical Plan ==
+AdaptiveSparkPlan (4)
++- Project (3)
+   +- Filter (2)
+      +- Range (1)
+
+
+(1) Range
+Output [1]: [id#0L]
+Arguments: Range (0, 1000, step=1, splits=Some(2))
+
+(2) Filter
+Input [1]: [id#0L]
+Condition : (cast((id#0L * 2) as double) > Subquery subquery#15, [id=#79].avg(v))
+
+(3) Project
+Output [3]: [id#0L, (id#0L * 2) AS v#1L, Subquery subquery#13, [id=#77].max(v) AS mx#14L]
+Input [1]: [id#0L]
+
+(4) AdaptiveSparkPlan
+Output [3]: [id#0L, v#1L, mx#14L]
+Arguments: isFinalPlan=false
+
+===== Subqueries =====
+
+Subquery:1 Hosting operator id = 3 Hosting Expression = Subquery subquery#13, [id=#77]
+AdaptiveSparkPlan (11)
++- Project (10)
+   +- HashAggregate (9)
+      +- Exchange (8)
+         +- HashAggregate (7)
+            +- Project (6)
+               +- Range (5)
+
+
+(5) Range
+Output [1]: [id#18L]
+Arguments: Range (0, 1000, step=1, splits=Some(2))
+
+(6) Project
+Output [1]: [(id#18L * 2) AS v#19L]
+Input [1]: [id#18L]
+
+(7) HashAggregate
+Input [1]: [v#19L]
+Keys: []
+Functions [2]: [partial_avg(v#19L), partial_max(v#19L)]
+Aggregate Attributes [3]: [sum#25, count#26L, max#28L]
+Results [3]: [sum#29, count#30L, max#31L]
+
+(8) Exchange
+Input [3]: [sum#29, count#30L, max#31L]
+Arguments: SinglePartition, ENSURE_REQUIREMENTS, [plan_id=57]
+
+(9) HashAggregate
+Input [3]: [sum#29, count#30L, max#31L]
+Keys: []
+Functions [2]: [avg(v#19L), max(v#19L)]
+Aggregate Attributes [2]: [avg(v#19L)#16, max(v#19L)#20L]
+Results [2]: [avg(v#19L)#16 AS avg(v)#17, max(v#19L)#20L AS max(v)#21L]
+
+(10) Project
+Output [1]: [named_struct(avg(v), avg(v)#17, max(v), max(v)#21L) AS mergedValue#27]
+Input [2]: [avg(v)#17, max(v)#21L]
+
+(11) AdaptiveSparkPlan
+Output [1]: [mergedValue#27]
+Arguments: isFinalPlan=false
+
+Subquery:2 Hosting operator id = 2 Hosting Expression = Subquery subquery#15, [id=#79]
+AdaptiveSparkPlan (18)
++- Project (17)
+   +- HashAggregate (16)
+      +- Exchange (15)
+         +- HashAggregate (14)
+            +- Project (13)
+               +- Range (12)
+
+
+(12) Range
+Output [1]: [id#18L]
+Arguments: Range (0, 1000, step=1, splits=Some(2))
+
+(13) Project
+Output [1]: [(id#18L * 2) AS v#19L]
+Input [1]: [id#18L]
+
+(14) HashAggregate
+Input [1]: [v#19L]
+Keys: []
+Functions [2]: [partial_avg(v#19L), partial_max(v#19L)]
+Aggregate Attributes [3]: [sum#25, count#26L, max#28L]
+Results [3]: [sum#29, count#30L, max#31L]
+
+(15) Exchange
+Input [3]: [sum#29, count#30L, max#31L]
+Arguments: SinglePartition, ENSURE_REQUIREMENTS, [plan_id=74]
+
+(16) HashAggregate
+Input [3]: [sum#29, count#30L, max#31L]
+Keys: []
+Functions [2]: [avg(v#19L), max(v#19L)]
+Aggregate Attributes [2]: [avg(v#19L)#16, max(v#19L)#20L]
+Results [2]: [avg(v#19L)#16 AS avg(v)#17, max(v#19L)#20L AS max(v)#21L]
+
+(17) Project
+Output [1]: [named_struct(avg(v), avg(v)#17, max(v), max(v)#21L) AS mergedValue#27]
+Input [2]: [avg(v)#17, max(v)#21L]
+
+(18) AdaptiveSparkPlan
+Output [1]: [mergedValue#27]
+Arguments: isFinalPlan=false
+
+
+

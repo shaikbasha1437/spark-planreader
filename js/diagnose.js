@@ -225,6 +225,7 @@
       fix: { pyspark: 'df = spark.table("' + tbl + '").select("id", "amount", "order_date")  # only what the query uses', sql: 'SELECT id, amount, order_date FROM ' + tbl + '  -- instead of SELECT *', config: '# Parquet nested-column pruning (on by default in 3.x)\nspark.sql.optimizer.nestedSchemaPruning.enabled=true' } };
   }));
   rule('repeated-scan', 'Same table scanned more than once', (ctx) => {
+    if (ctx.res.format === 'codegen') return []; // codegen output repeats subtrees, so counts would be wrong
     const groups = {};
     ctx.main.filter((n) => n.category === 'scan' && /^(FileScan|Scan|BatchScan|PhotonScan)/.test(n.name)).forEach((n) => { const k = (n.attrs.location && n.attrs.location.paths && n.attrs.location.paths.join(',')) || n.attrs.table; if (!k) return; (groups[k] = groups[k] || []).push(n); });
     return Object.keys(groups).filter((k) => groups[k].length >= 2).map((k) => {
