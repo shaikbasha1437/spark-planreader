@@ -1,0 +1,9 @@
+== Physical Plan ==
+Execute CreateDataSourceTableAsSelectCommand
+   +- CreateDataSourceTableAsSelectCommand `spark_catalog`.`demo`.`sorted_orders`, ErrorIfExists, [order_id, customer_id, product_id, amount, channel, note, tags, order_date]
+         +- Sort [amount#3 ASC NULLS FIRST], true
+            +- Project [order_id#0L, customer_id#1L, product_id#2L, amount#3, channel#4, note#5, tags#6, order_date#7]
+               +- SubqueryAlias orders
+                  +- View (`orders`, [order_id#0L, customer_id#1L, product_id#2L, amount#3, channel#4, note#5, tags#6, order_date#7])
+                     +- Relation [order_id#0L,customer_id#1L,product_id#2L,amount#3,channel#4,note#5,tags#6,order_date#7] parquet
+

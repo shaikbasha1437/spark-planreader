@@ -1,0 +1,27 @@
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- == Initial Plan ==
+   ColumnarToRow
+   +- PhotonResultStage
+      +- PhotonGroupingAgg(keys=[channel#4], functions=[finalmerge_count(merge count#61L) AS count(1)#55L])
+         +- PhotonShuffleExchangeSource
+            +- PhotonShuffleMapStage
+               +- PhotonShuffleExchangeSink hashpartitioning(channel#4, 200)
+                  +- PhotonGroupingAgg(keys=[channel#4], functions=[partial_count(1) AS count#61L])
+                     +- PhotonProject [channel#4]
+                        +- PhotonBroadcastHashJoin [customer_id#1L], [customer_id#8L], Inner, BuildRight, false, true
+                           :- PhotonRowToColumnar
+                           :  +- *(1) Filter (pythonUDF0#70 = high)
+                           :     +- BatchEvalPython [tier(amount#3)#52], [pythonUDF0#70]
+                           :        +- ColumnarToRow
+                           :           +- PhotonScan parquet main.sales.orders[customer_id#1L,amount#3,channel#4,order_date#7] DataFilters: [isnotnull(customer_id#1L)], DictionaryFilters: [], Format: parquet, Location: PreparedDeltaFileIndex(1 paths)[dbfs:/mnt/lake/orders], OptionalDataFilters: [], PartitionFilters: [], ReadSchema: struct<customer_id:bigint,amount:decimal(10,2),channel:string>, RequiredDataFilters: [isnotnull(customer_id#1L)]
+                           +- PhotonBroadcastExchange HashedRelationBroadcastMode(List(input[0, bigint, false]),false), [plan_id=412]
+                              +- PhotonFilter isnotnull(customer_id#8L)
+                                 +- PhotonScan parquet main.sales.customers[customer_id#8L] DataFilters: [isnotnull(customer_id#8L)], DictionaryFilters: [], Format: parquet, Location: PreparedDeltaFileIndex(1 paths)[dbfs:/mnt/lake/customers], OptionalDataFilters: [], PartitionFilters: [], ReadSchema: struct<customer_id:bigint>, RequiredDataFilters: [isnotnull(customer_id#8L)]
+
+== Photon Explanation ==
+Photon does not fully support the query because:
+		tier(amount#3)#52 is not supported:
+			Python UDFs are not supported by Photon.
+Reference node:
+	BatchEvalPython [tier(amount#3)#52], [pythonUDF0#70]

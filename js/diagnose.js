@@ -203,10 +203,10 @@
       if (!data.length && !bl && !/pythonUDF/.test(cond)) return;
       const reason = bl || 'an expression the data source cannot evaluate';
       const fmt = (a.format || '').toLowerCase();
-      out.push({ severity: 'medium', title: 'Filter on ' + tbl + ' is not pushed into the scan (' + reason + ')', nodes: [n.id].concat(fl.map((f) => f.id)),
+      out.push({ key: 'pushdown|' + tbl, severity: 'medium', title: 'Filter on ' + tbl + ' is not pushed into the scan (' + reason + ')', nodes: [n.id].concat(fl.map((f) => f.id)),
         explain: 'The rows are filtered by ' + T.stripIds(condPreds).slice(0, 220) + ' only after they are read. PushedFilters ' + (pushed.length ? 'has ' + pushed.join(', ') + ' but not the rest' : 'is empty apart from null checks') + ', because the condition uses ' + reason + '.' + (/cast/.test(reason) && /csv|json|text/.test(fmt) ? ' With a ' + fmt.toUpperCase() + ' source read without a schema every column is a string, so comparing with a number adds a cast.' : ''),
         why: 'Pushed filters let ' + (/parquet|orc|delta/.test(fmt) ? 'Parquet/ORC skip whole row groups using min/max statistics' : 'the reader drop rows while parsing') + ' instead of materializing every row first.',
-        fix: { pyspark: /cast/.test(reason) ? '# Read with a schema so the column already has the right type\nschema = "event_id STRING, user_id INT, event_type STRING, ts TIMESTAMP"\ndf = spark.read.schema(schema).option("header", True).csv(".../' + tbl + '")\ndf.filter((F.col("user_id") == 42) | (F.col("event_type") == "buy"))' : /UDF/.test(reason) ? '# Replace the UDF in the filter with built-in column functions\nfrom pyspark.sql import functions as F\ndf.filter(F.col("order_date") >= "2026-02-20")' : '# Compare the raw column, move the function to the literal side\ndf.filter(F.col("name") == "alice")  # instead of F.lower(col) == "alice" when data is already normalized', sql: '-- compare the column itself, not a function of it\nWHERE user_id = 42  -- column already typed INT', config: 'spark.sql.parquet.filterPushdown=true\nspark.sql.csv.filterPushdown.enabled=true' } });
+        fix: { pyspark: /<=>/.test(reason) ? '# Filter on the source column, not on a label derived from it\nfrom pyspark.sql import functions as F\ndf.filter(F.col("amount") > 250)  # pushed to Parquet\n# instead of: withColumn("tier", F.when(F.col("amount") > 250, "high")...).filter(F.col("tier") == "high")' : /cast/.test(reason) ? '# Read with a schema so the column already has the right type\nschema = "event_id STRING, user_id INT, event_type STRING, ts TIMESTAMP"\ndf = spark.read.schema(schema).option("header", True).csv(".../' + tbl + '")\ndf.filter((F.col("user_id") == 42) | (F.col("event_type") == "buy"))' : /UDF/.test(reason) ? '# Replace the UDF in the filter with built-in column functions\nfrom pyspark.sql import functions as F\ndf.filter(F.col("order_date") >= "2026-02-20")' : '# Compare the raw column, move the function to the literal side\ndf.filter(F.col("name") == "alice")  # instead of F.lower(col) == "alice" when data is already normalized', sql: '-- compare the column itself, not a function of it\nWHERE user_id = 42  -- column already typed INT', config: 'spark.sql.parquet.filterPushdown=true\nspark.sql.csv.filterPushdown.enabled=true' } });
     });
     return out;
   });
@@ -339,7 +339,7 @@
     let findings = [];
     RULES.forEach((r, i) => {
       let out; try { out = r.fn(ctx); } catch (e) { out = null; if (typeof console !== 'undefined') console.warn('rule ' + r.id + ' failed', e); }
-      if (!out) return; (Array.isArray(out) ? out : [out]).forEach((f, k) => { if (!f) return; f.rule = r.id; f.ruleTitle = r.title; f.order = i * 100 + k; f.id = r.id + (k ? '-' + k : ''); findings.push(f); });
+      if (!out) return; (Array.isArray(out) ? out : [out]).forEach((f, k) => { if (!f) return; f.rule = r.id; f.ruleTitle = r.title; f.order = i * 100 + k; f.key = f.key || (r.id + '|' + T.stripIds(f.title)); f.id = r.id + (k ? '-' + k : ''); findings.push(f); });
     });
     findings.sort(findingsSort);
     return { findings, summary: summarize(res, findings) };
