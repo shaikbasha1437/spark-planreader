@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Spark PlanReader: read Spark EXPLAIN plans and event logs, find what makes a job slow</title>
+  <meta name="description" content="Paste Spark EXPLAIN output or an event log. See the plan as a tree and a graph, with stages, codegen blocks and metrics, plus plain-English findings and PySpark / SQL / config fixes. Runs entirely in your browser.">
+  <meta name="theme-color" content="#e25a1c">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <script>try { var t = localStorage.getItem('spark-planreader:theme'); document.documentElement.dataset.theme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch (e) { document.documentElement.dataset.theme = 'light'; }</script>
+</head>
+<body>
+  <a class="skip" href="#results">Skip to results</a>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Spark PlanReader home"><img src="icons/icon.svg" alt="" width="30" height="30"> <span>Spark PlanReader</span></a>
+    <div class="modes" role="group" aria-label="Mode">
+      <button class="btn mode" id="modeAnalyze" type="button" aria-pressed="true">Analyze</button>
+      <button class="btn mode" id="modeCompare" type="button" aria-pressed="false">Compare</button>
+    </div>
+    <nav class="nav" aria-label="Tools">
+      <button class="btn ghost" id="btnSamples" type="button" title="Sample plans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="lbl">Samples</span></button>
+      <button class="btn ghost" id="btnHistory" type="button" title="Recent plans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 3"/></svg><span class="lbl">History</span></button>
+      <button class="btn ghost" id="btnShare" type="button" title="Share link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span class="lbl">Share</span></button>
+      <button class="btn ghost" id="btnExport" type="button" title="Export report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="lbl">Export</span></button>
+      <button class="btn ghost" id="btnGlossary" type="button" title="Operator glossary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg><span class="lbl">Glossary</span></button>
+      <button class="btn ghost icon-btn" id="btnHelp" type="button" aria-label="Help and keyboard shortcuts" title="Help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/></svg></button>
+      <button class="btn ghost icon-btn" id="btnTheme" type="button" aria-label="Switch to dark theme" title="Theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    </nav>
+  </header>
+
+  <main class="layout" id="main">
+    <section class="pane input-pane" id="analyzePane" aria-label="Plan input">
+      <div class="card">
+        <label class="lab" for="planText">Paste <code>EXPLAIN</code> output, <code>df.explain()</code> text, or a Spark event log</label>
+        <div id="fileChip" class="filechip" hidden></div>
+        <textarea id="planText" class="plantext" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="== Physical Plan ==&#10;AdaptiveSparkPlan isFinalPlan=false&#10;+- HashAggregate(keys=[country#10], functions=[sum(amount#3)])&#10;   +- Exchange hashpartitioning(country#10, 200), ENSURE_REQUIREMENTS, [plan_id=42]&#10;      ..."></textarea>
+        <div class="actions">
+          <button class="btn primary" id="btnAnalyze" type="button">Analyze <kbd>Ctrl</kbd><kbd>Enter</kbd></button>
+          <label class="btn" for="fileInput" id="fileLabel" tabindex="0" role="button">Open file…</label>
+          <input id="fileInput" type="file" accept=".txt,.json,.log,.plan,.inprogress,text/plain,application/json" class="visually-hidden">
+          <button class="btn ghost" id="btnClear" type="button">Clear</button>
+          <button class="btn ghost" id="btnTrySample" type="button">Try a sample</button>
+        </div>
+        <p class="hint">Accepts simple, extended, formatted, cost and codegen modes from Spark 3.x and 4.x (AQE and Photon plans too), and event logs (JSON lines with SQL metrics). Everything stays in this browser.</p>
+      </div>
+    </section>
+
+    <section class="pane input-pane" id="comparePane" aria-label="Compare two plans" hidden>
+      <div class="card">
+        <div class="cmp-head">
+          <label class="lab" for="fixPreset">Before / after a fix</label>
+          <select id="fixPreset"><option value="">Load a sample pair…</option></select>
+        </div>
+        <div class="cmp-grid">
+          <div><label class="lab" for="cmpA">Before</label><textarea id="cmpA" class="plantext small" spellcheck="false" placeholder="Paste the original plan"></textarea><label class="btn small" for="fileA" tabindex="0" role="button">Open file…</label><input id="fileA" type="file" accept=".txt,.json,.log,text/plain,application/json" class="visually-hidden"></div>
+          <div><label class="lab" for="cmpB">After</label><textarea id="cmpB" class="plantext small" spellcheck="false" placeholder="Paste the plan after your change"></textarea><label class="btn small" for="fileB" tabindex="0" role="button">Open file…</label><input id="fileB" type="file" accept=".txt,.json,.log,text/plain,application/json" class="visually-hidden"></div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="btnCompare" type="button">Compare <kbd>Ctrl</kbd><kbd>Enter</kbd></button>
+          <button class="btn ghost" id="btnSwap" type="button">Swap</button>
+          <button class="btn ghost" id="btnClearCmp" type="button">Clear</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane results" id="results" tabindex="-1" aria-label="Results" aria-live="polite">
+      <div class="welcome card" id="welcome">
+        <h1>See what your Spark job really does</h1>
+        <p>Paste the output of <code>df.explain()</code>, <code>EXPLAIN FORMATTED</code> or a Spark event log. PlanReader draws the plan, marks stages and codegen blocks, and points out shuffles, joins that could be broadcast, skew, Python UDFs, missing partition pruning and more, with fixes you can copy.</p>
+        <div class="welcome-actions"><button class="btn primary" type="button" data-sample="smj-aqe-off">Open a sample plan</button> <button class="btn" type="button" data-sample="eventlog">Open a sample event log</button> <button class="btn" type="button" data-pair="broadcast">Compare a before/after</button></div>
+      </div>
+    </section>
+  </main>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <noscript><p class="noscript">Spark PlanReader needs JavaScript. Nothing you paste is uploaded anywhere.</p></noscript>
+  <script src="js/textutil.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/eventlog.js"></script>
+  <script src="js/glossary.js"></script>
+  <script src="js/diagnose.js"></script>
+  <script src="js/diff.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/samples.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/modal.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/views.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

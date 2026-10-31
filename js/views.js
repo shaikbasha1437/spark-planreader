@@ -189,7 +189,7 @@
     let view = { x: 0, y: 0, k: 1 };
     const apply = () => { g.setAttribute('transform', `translate(${view.x},${view.y}) scale(${view.k})`); zoomLabel.textContent = Math.round(view.k * 100) + '%'; };
     const size = () => { const r = svg.getBoundingClientRect(); return { w: r.width || 800, h: r.height || 500 }; };
-    function fit() { const { w, h: hh } = size(); const k = Math.max(0.15, Math.min(1.2, Math.min(w / W, hh / H))); view = { k, x: (w - W * k) / 2, y: Math.max(0, (hh - H * k) / 2) }; if (H * k > hh) view.y = 8; apply(); }
+    function fit() { const { w, h: hh } = size(); const k = Math.max(0.15, Math.min(1.1, Math.max(Math.min(w / W, hh / H), Math.min(0.8, w / W)))); view = { k, x: (w - W * k) / 2, y: Math.max(0, (hh - H * k) / 2) }; if (H * k > hh) view.y = 8; apply(); }
     function zoomAt(f, cx, cy) { const k = Math.max(0.1, Math.min(3, view.k * f)); const r = k / view.k; view.x = cx - (cx - view.x) * r; view.y = cy - (cy - view.y) * r; view.k = k; apply(); }
     function center(id, z) { const o = byId[id]; if (!o) return; const { w, h: hh } = size(); if (z) view.k = Math.max(view.k, 0.8); view.x = w / 2 - (o.x + PAD + o.w / 2) * view.k; view.y = hh / 2 - (o.y + PAD + o.h / 2) * view.k; apply(); }
     function ensureVisible(o) { const { w, h: hh } = size(); const x = (o.x + PAD) * view.k + view.x, y = (o.y + PAD) * view.k + view.y; if (x < 0 || y < 0 || x + o.w * view.k > w || y + o.h * view.k > hh) center(o.id); }

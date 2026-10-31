@@ -1,0 +1,12 @@
+{
+  "name": "spark-planreader",
+  "version": "1.0.0",
+  "description": "Read Spark EXPLAIN plans and event logs in the browser: tree and graph views, stages, codegen, metrics, findings with PySpark/SQL/config fixes, and before/after plan diffs. Client-side only.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "serve": "python3 -m http.server 8080"
+  },
+  "engines": { "node": ">=18" }
+}
