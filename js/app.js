@@ -8,8 +8,8 @@
   const MAX_HISTORY_TEXT = 400 * 1024;
   const SHARE_LIMIT = 60000; // characters of URL hash; most browsers and chat apps cope with this
   const S = { mode: 'analyze', text: '', file: null, res: null, diag: null, ev: null, execId: null, view: 'findings', search: '', overlay: true, hidePlumbing: true, showInitial: false, selected: null, focus: [], collapsed: new Set(), title: '', historyId: null, cmp: null, cmpFiles: { a: null, b: null } };
-  const pref = store.load() || {}; if (pref.overlay === false) S.overlay = false; if (pref.hidePlumbing === false) S.hidePlumbing = false; if (pref.view) S.view = pref.view;
-  const savePref = () => store.save({ overlay: S.overlay, hidePlumbing: S.hidePlumbing, view: S.view });
+  const pref = store.load() || {}; if (pref.overlay === false) S.overlay = false; if (pref.hidePlumbing === false) S.hidePlumbing = false;
+  const savePref = () => store.save({ overlay: S.overlay, hidePlumbing: S.hidePlumbing });
   const say = (msg, opts) => toast(msg, opts);
   const doCopy = async (text, msg) => { const ok = await copy(text); say(ok ? (msg || 'Copied') : 'Copy failed: select the text and copy it by hand'); };
 
