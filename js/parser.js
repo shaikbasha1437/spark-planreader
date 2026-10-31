@@ -326,7 +326,7 @@
     const secs = []; let cur = null; let codegenFound = false;
     lines.forEach((l, i) => {
       const h = /^==\s*(.+?)\s*==\s*$/.exec(l);
-      if (h && !/^==\s*(Final|Initial) Plan/i.test(l)) { cur = { title: h[1], start: i + 1, lines: [] }; secs.push(cur); return; }
+      if (h && !/^===/.test(l) && !/^==\s*(Final|Initial) Plan/i.test(l)) { cur = { title: h[1], start: i + 1, lines: [] }; secs.push(cur); return; }
       if (/^Found \d+ WholeStageCodegen subtrees?\.?/.test(l)) { codegenFound = true; return; }
       if (!cur) { cur = { title: null, start: i, lines: [] }; secs.push(cur); }
       cur.lines.push(l);
@@ -458,5 +458,5 @@
     if (a.stageId != null) return 'stage ' + a.stageId;
     return '';
   }
-  return { parsePlan, normalize, parseTree, makeNode, categoryOf, isExchange, isShuffle, isPhoton, walk, scanParts, shortLabel, parsePartitioning, detectVersion, fillAttrs, resetSeq: (v) => { seq = v || 0; }, nextId: () => 'n' + (++seq) };
+  return { parsePlan, finish, assignStages, normalize, parseTree, makeNode, categoryOf, isExchange, isShuffle, isPhoton, walk, scanParts, shortLabel, parsePartitioning, detectVersion, fillAttrs, resetSeq: (v) => { seq = v || 0; }, nextId: () => 'n' + (++seq) };
 });
