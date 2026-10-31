@@ -1,0 +1,8 @@
+== Physical Plan ==
+*(2) Project [order_id#0L, amount#3]
++- *(2) Filter pythonUDF0#10: boolean
+   +- BatchEvalPython [recent(order_date#7)#8], [pythonUDF0#10]
+      +- *(1) ColumnarToRow
+         +- FileScan parquet [order_id#0L,amount#3,order_date#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/lake/orders], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<order_id:bigint,amount:decimal(10,2)>
+
+
